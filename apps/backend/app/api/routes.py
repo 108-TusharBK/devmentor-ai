@@ -5,6 +5,7 @@ from app.services.gemini_service import ask_gemini
 from app.services.requirement_analyzer import analyze_requirements
 from app.services.tech_comparison import compare_technologies
 from app.services.duplicate_detector import detect_duplicates
+from app.services.roadmap_generator import generate_roadmap
 
 router = APIRouter()
 
@@ -23,6 +24,10 @@ class CompareRequest(BaseModel):
 
 class DuplicateRequest(BaseModel):
     tool_list: str
+
+
+class RoadmapRequest(BaseModel):
+    goal: str    
 
 
 @router.post("/chat")
@@ -46,4 +51,10 @@ def compare_tech(request: CompareRequest):
 @router.post("/detect-duplicates")
 def detect_duplicate_tools(request: DuplicateRequest):
     result = detect_duplicates(request.tool_list)
+    return {"response": result}
+
+
+@router.post("/generate-roadmap")
+def generate_learning_roadmap(request: RoadmapRequest):
+    result = generate_roadmap(request.goal)
     return {"response": result}
