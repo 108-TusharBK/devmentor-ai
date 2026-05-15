@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from app.services.gemini_service import ask_gemini
 from app.services.requirement_analyzer import analyze_requirements
 from app.services.tech_comparison import compare_technologies
+from app.services.duplicate_detector import detect_duplicates
 
 router = APIRouter()
 
@@ -18,6 +19,10 @@ class ProjectRequest(BaseModel):
 
 class CompareRequest(BaseModel):
     query: str
+
+
+class DuplicateRequest(BaseModel):
+    tool_list: str
 
 
 @router.post("/chat")
@@ -35,4 +40,10 @@ def analyze_project(request: ProjectRequest):
 @router.post("/compare-tech")
 def compare_tech(request: CompareRequest):
     result = compare_technologies(request.query)
+    return {"response": result}
+
+
+@router.post("/detect-duplicates")
+def detect_duplicate_tools(request: DuplicateRequest):
+    result = detect_duplicates(request.tool_list)
     return {"response": result}
