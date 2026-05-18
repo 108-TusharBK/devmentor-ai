@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import "./App.css";
 
 const API_BASE = "http://127.0.0.1:8000";
@@ -60,15 +61,53 @@ export default function App() {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
+  const STORAGE_KEY = "devmentor-history";
+  const [history, setHistory] = useState([]);
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState("");
+
+  
+  useEffect(() => {
+    function loadVoices() {
+      const availableVoices = speechSynthesis.getVoices();
+      setVoices(availableVoices);
+
+      if (availableVoices.length > 0 && !selectedVoice) {
+        const preferred =
+          availableVoices.find((v) =>
+            v.name.includes("Google US English")
+          ) ||
+          availableVoices.find((v) =>
+            v.name.includes("Microsoft Aria")
+          ) ||
+          availableVoices.find((v) =>
+            v.lang.startsWith("en")
+          );
+
+        if (preferred) {
+          setSelectedVoice(preferred.name);
+        }
+      }
+    }
+
+    loadVoices();
+      speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
 
   useEffect(() => {
-    if (window.speechSynthesis) {
-      speechSynthesis.getVoices();
-      speechSynthesis.onvoiceschanged = () => {
-        speechSynthesis.getVoices();
-      };
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  }, [history]);
 
   async function handleSubmit() {
     if (!input.trim()) return;
@@ -97,7 +136,21 @@ export default function App() {
       const formattedResponse = cleanMarkdown(rawResponse);
 
       setResponse(formattedResponse);
-      speakText(formattedResponse);
+
+      if(!formattedResponse.startsWith("Error:")) {
+        speakText(formattedResponse);
+      }
+
+      const entry = {
+        id: Date.now(),
+        feature: selectedFeature.label,
+        input,
+        response: formattedResponse,
+        timestamp: new Date().toLocaleString(),
+      };
+
+    setHistory((prev) => [entry, ...prev.slice(0, 19)]);
+
     } catch (error) {
       setResponse(`Error: ${error.message}`);
     } finally {
@@ -151,6 +204,14 @@ export default function App() {
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
+    const voice = voices.find(
+      (v) => v.name === selectedVoice
+    );
+
+    if (voice) {
+      utterance.voice = voice;
+    }
+
     speechSynthesis.speak(utterance);
   }
 
@@ -158,6 +219,51 @@ export default function App() {
     if (window.speechSynthesis) {
       speechSynthesis.cancel();
     }
+  }
+
+  async function copyResponse() {
+    if (!response) return;
+    await navigator.clipboard.writeText(response);
+    alert("Response copied to clipboard.");
+  }
+
+  function downloadResponse() {
+    if (!response) return;
+
+    const blob = new Blob([response], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${selectedFeature.label
+      .toLowerCase()
+      .replace(/\s+/g, "-")}.md`;
+
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearResponse() {
+    setInput("");
+    setResponse("");
+    stopSpeaking();
+  }
+
+  function clearHistory() {
+    if (!confirm("Delete all saved history?")) return;
+    setHistory([]);
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function loadHistoryItem(item) {
+    setInput(item.input);
+    setResponse(item.response);
+
+    const feature = FEATURES.find(
+      (f) => f.label === item.feature
+    );
+
+    if (feature) setSelectedFeature(feature);
   }
 
   return (
@@ -203,6 +309,17 @@ export default function App() {
             onChange={(e) => setInput(e.target.value)}
           />
 
+          <select
+            value={selectedVoice}
+            onChange={(e) => setSelectedVoice(e.target.value)}
+          >
+            {voices.map((voice) => (
+              <option key={voice.name} value={voice.name}>
+                {voice.name}
+              </option>
+            ))}
+          </select>  
+
           <div className="button-group">
             <button
               className="primary-btn"
@@ -220,14 +337,68 @@ export default function App() {
               🔇 Stop
             </button>
           </div>
+          
+          <div className="button-group utility-group">
+            <button className="secondary-btn" onClick={copyResponse}>
+              📋 Copy
+            </button>
+
+            <button className="secondary-btn" onClick={downloadResponse}>
+              💾 Download
+            </button>
+
+            <button className="secondary-btn" onClick={clearResponse}>
+              🗑 Clear
+            </button>
+          </div>
 
           <div className="response-card">
             <div className="response-header">Response</div>
-            <pre className="response">
-              {response || "Your AI response will appear here..."}
-            </pre>
+            <div className= "response markdown-body">
+              {response ? (
+                <ReactMarkdown>{ response }</ReactMarkdown>
+              ) : (
+                "Your AI response will appear here..."
+              )}
+            </div>
           </div>
         </section>
+        <aside className="history card">
+          <div className="history-header">
+            <h2>History</h2>
+
+            <button
+              className="secondary-btn small-btn"
+              onClick={clearHistory}
+            >
+              Clear All
+            </button>
+          </div>
+
+          <div className="history-list">
+            {history.length === 0 ? (
+              <p className="empty-history">
+                No saved conversations yet.
+              </p>
+            ) : (
+              history.map((item) => (
+                <button
+                  key={item.id}
+                  className="history-item"
+                  onClick={() => loadHistoryItem(item)}
+                >
+                  <strong>{item.feature}</strong>
+                  <span>
+                    {item.input.length > 60
+                      ? `${item.input.slice(0, 60)}...`
+                      : item.input}
+                  </span>
+                  <small>{item.timestamp}</small>
+                </button>
+              ))
+            )}
+          </div>
+        </aside>
       </main>
     </div>
   );
