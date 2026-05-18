@@ -1,11 +1,11 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.services.gemini_service import ask_gemini
-from app.services.requirement_analyzer import analyze_requirements
-from app.services.tech_comparison import compare_technologies
-from app.services.duplicate_detector import detect_duplicates
-from app.services.roadmap_generator import generate_roadmap
+from apps.backend.app.services.gemini_service import ask_gemini
+from apps.backend.app.services.requirement_analyzer import analyze_requirements
+from apps.backend.app.services.tech_comparison import compare_technologies
+from apps.backend.app.services.duplicate_detector import detect_duplicates
+from apps.backend.app.services.roadmap_generator import generate_roadmap
 
 router = APIRouter()
 
@@ -39,7 +39,7 @@ def chat(request: ChatRequest):
 @router.post("/analyze-project")
 def analyze_project(request: ProjectRequest):
     result = analyze_requirements(request.project_idea)
-    return result
+    return {"response": result}
 
 
 @router.post("/compare-tech")

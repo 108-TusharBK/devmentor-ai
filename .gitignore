@@ -3,3 +3,10 @@ __pycache__/
 *.pyc
 .env
 data/
+apps/frontend/node_modules/
+apps/frontend/public
+apps/frontend/README.md
+apps/frontend/vite.config.js
+apps/frontend/package-lock.json
+apps/frontend/package.json
+apps/frontend/src/assets

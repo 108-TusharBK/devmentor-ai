@@ -1,5 +1,21 @@
 import json
-from app.services.gemini_service import ask_gemini
+import re
+from apps.backend.app.services.gemini_service import ask_gemini
+
+def extract_json(text: str) -> dict:
+    # Remove markdown fences
+    text = re.sub(r"^```json\s*", "", text.strip())
+    text = re.sub(r"\s*```$", "", text.strip())
+
+    # Find first JSON object
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start == -1 or end == -1:
+        raise ValueError("No JSON object found in model response.")
+
+    json_text = text[start:end + 1]
+    return json.loads(json_text)
 
 
 def analyze_requirements(project_idea: str) -> dict:
@@ -37,12 +53,4 @@ Return JSON in this exact format:
 """
     response = ask_gemini(prompt)
 
-    # Remove optional markdown code fences if present
-    response = response.strip()
-    if response.startswith("```"):
-        response = response.split("```", 2)[1]
-        if response.startswith("json"):
-            response = response[4:]
-        response = response.strip()
-
-    return json.loads(response)
+    return extract_json(response)

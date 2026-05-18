@@ -1,4 +1,4 @@
-from app.services.gemini_service import ask_gemini
+from apps.backend.app.services.gemini_service import ask_gemini
 
 
 def compare_technologies(query: str) -> str:

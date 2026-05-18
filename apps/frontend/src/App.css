@@ -72,6 +72,17 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.button-group button {
+  flex: 1;
+}
+
+
 .response {
   margin-top: 2rem;
   background: #111827;

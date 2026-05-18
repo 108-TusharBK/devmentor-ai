@@ -49,31 +49,68 @@ export default function App() {
     setResponse("");
 
     try {
-      const res = await fetch(
-        `${API_BASE}${selectedFeature.endpoint}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            [selectedFeature.payloadKey]: input,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}${selectedFeature.endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          [selectedFeature.payloadKey]: input,
+        }),
+      });
 
       const data = await res.json();
 
-      setResponse(
+      const formattedResponse =
         typeof data.response === "string"
           ? data.response
-          : JSON.stringify(data, null, 2)
-      );
+          : JSON.stringify(data.response ?? data, null, 2);
+
+      setResponse(formattedResponse);
+      speakText(formattedResponse);
     } catch (error) {
       setResponse(`Error: ${error.message}`);
     }
 
     setLoading(false);
+  }
+
+  function startListening() {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+    };
+
+    recognition.start();
+  }
+
+  function speakText(text) {
+    if (!window.speechSynthesis) return;
+
+    const utterance = new SpeechSynthesisUtterance(
+      text.slice(0, 2000)
+    );
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    speechSynthesis.speak(utterance);
+  }
+
+  function stopSpeaking() {
+    if (window.speechSynthesis) {
+      speechSynthesis.cancel();
+    }
   }
 
   return (
@@ -105,9 +142,19 @@ export default function App() {
         onChange={(e) => setInput(e.target.value)}
       />
 
-      <button onClick={handleSubmit} disabled={loading}>
-        {loading ? "Thinking..." : "Submit"}
-      </button>
+      <div className="button-group">
+        <button onClick={handleSubmit} disabled={loading}>
+          {loading ? "Thinking..." : "Submit"}
+        </button>
+
+        <button onClick={startListening}>
+          🎤 Speak
+        </button>
+
+        <button onClick={stopSpeaking}>
+          🔇 Stop Voice
+        </button>
+      </div>
 
       <pre className="response">
         {response || "Response will appear here..."}
