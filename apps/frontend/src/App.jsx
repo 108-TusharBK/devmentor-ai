@@ -61,6 +61,15 @@ export default function App() {
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (window.speechSynthesis) {
+      speechSynthesis.getVoices();
+      speechSynthesis.onvoiceschanged = () => {
+        speechSynthesis.getVoices();
+      };
+    }
+  }, []);
+
   async function handleSubmit() {
     if (!input.trim()) return;
 
@@ -122,11 +131,25 @@ export default function App() {
 
     speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(
-      cleanMarkdown(text).slice(0, 2000)
-      );
-    utterance.rate = 1;
-    utterance.pitch = 1;
+    const cleanedText = cleanMarkdown(text).slice(0, 2000);
+    const utterance = new SpeechSynthesisUtterance(cleanedText);
+
+    const voices = speechSynthesis.getVoices();
+
+    const preferredVoice =
+      voices.find((v) => v.name.includes("Google US English")) ||
+      voices.find((v) => v.name.includes("Microsoft Aria")) ||
+      voices.find((v) => v.name.includes("Microsoft Jenny")) ||
+      voices.find((v) => v.name.includes("Samantha")) ||
+      voices.find((v) => v.lang.startsWith("en"));
+
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
 
     speechSynthesis.speak(utterance);
   }
