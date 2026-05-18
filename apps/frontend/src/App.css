@@ -314,6 +314,31 @@ textarea:focus {
   max-width: 100%;
 }
 
+
+.workspace,
+.response-card,
+.markdown-body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.response {
+  overflow-x: auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.markdown-body table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
 @media (min-width: 1200px) {
   .main-grid {
     grid-template-columns: 280px 1fr 320px;

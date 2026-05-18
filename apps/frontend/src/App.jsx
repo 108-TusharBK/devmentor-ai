@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import "./App.css";
 
 const API_BASE = "http://127.0.0.1:8000";
+const STORAGE_KEY = "devmentor-history";
 
 const FEATURES = [
   {
@@ -61,7 +62,6 @@ export default function App() {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
-  const STORAGE_KEY = "devmentor-history";
   const [history, setHistory] = useState([]);
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState("");
@@ -91,7 +91,11 @@ export default function App() {
     }
 
     loadVoices();
-      speechSynthesis.onvoiceschanged = loadVoices;
+    speechSynthesis.onvoiceschanged = loadVoices;
+
+    return()=> {
+      speechSynthesis.onvoiceschanged = null
+    }
   }, []);
 
   useEffect(() => {
@@ -126,6 +130,10 @@ export default function App() {
         }),
       });
 
+      if(!res.ok) {
+        throw new Error('Server error: ${res.status}');
+      }
+
       const data = await res.json();
 
       const rawResponse =
@@ -133,19 +141,19 @@ export default function App() {
         ? data.response
         : JSON.stringify(data.response ?? data, null, 2);
 
-      const formattedResponse = cleanMarkdown(rawResponse);
+      //const formattedResponse = cleanMarkdown(rawResponse);
 
-      setResponse(formattedResponse);
+      setResponse(rawResponse);
 
-      if(!formattedResponse.startsWith("Error:")) {
-        speakText(formattedResponse);
+      if(!rawResponse.startsWith("Error:")) {
+        speakText(rawResponse);
       }
 
       const entry = {
         id: Date.now(),
         feature: selectedFeature.label,
         input,
-        response: formattedResponse,
+        response: rawResponse,
         timestamp: new Date().toLocaleString(),
       };
 
