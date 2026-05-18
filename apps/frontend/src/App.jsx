@@ -41,6 +41,20 @@ const FEATURES = [
   },
 ];
 
+
+function cleanMarkdown(text) {
+  return text
+    .replace(/^#{1,6}\s+/gm, "")          // Remove headings
+    .replace(/\*\*(.*?)\*\*/g, "$1")      // Remove bold
+    .replace(/\*(.*?)\*/g, "$1")          // Remove italics
+    .replace(/`(.*?)`/g, "$1")            // Remove inline code
+    .replace(/^[-*+]\s+/gm, "• ")         // Convert bullet points
+    .replace(/\[(.*?)\]\((.*?)\)/g, "$1") // Convert markdown links
+    .replace(/\n{3,}/g, "\n\n")           // Reduce extra blank lines
+    .trim();
+}
+
+
 export default function App() {
   const [selectedFeature, setSelectedFeature] = useState(FEATURES[0]);
   const [input, setInput] = useState("");
@@ -66,10 +80,12 @@ export default function App() {
 
       const data = await res.json();
 
-      const formattedResponse =
+      const rawResponse =
         typeof data.response === "string"
-          ? data.response
-          : JSON.stringify(data.response ?? data, null, 2);
+        ? data.response
+        : JSON.stringify(data.response ?? data, null, 2);
+
+      const formattedResponse = cleanMarkdown(rawResponse);
 
       setResponse(formattedResponse);
       speakText(formattedResponse);
@@ -106,7 +122,9 @@ export default function App() {
 
     speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text.slice(0, 2000));
+    const utterance = new SpeechSynthesisUtterance(
+      cleanMarkdown(text).slice(0, 2000)
+      );
     utterance.rate = 1;
     utterance.pitch = 1;
 
