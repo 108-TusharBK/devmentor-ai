@@ -8,31 +8,36 @@ const FEATURES = [
     label: "Chat",
     endpoint: "/chat",
     payloadKey: "message",
-    placeholder: "Ask any question...",
+    placeholder: "Ask any technical question...",
+    icon: "💬",
   },
   {
     label: "Analyze Project",
     endpoint: "/analyze-project",
     payloadKey: "project_idea",
     placeholder: "Describe your project idea...",
+    icon: "🧠",
   },
   {
     label: "Compare Technologies",
     endpoint: "/compare-tech",
     payloadKey: "query",
     placeholder: "Compare Electron vs Tauri...",
+    icon: "⚖️",
   },
   {
     label: "Detect Duplicate Tools",
     endpoint: "/detect-duplicates",
     payloadKey: "tool_list",
-    placeholder: "LangChain, LangGraph, CrewAI, AutoGen...",
+    placeholder: "LangChain, LangGraph, CrewAI...",
+    icon: "🧹",
   },
   {
     label: "Generate Roadmap",
     endpoint: "/generate-roadmap",
     payloadKey: "goal",
     placeholder: "Learn FastAPI, LangGraph, Gemini API...",
+    icon: "🗺️",
   },
 ];
 
@@ -70,9 +75,9 @@ export default function App() {
       speakText(formattedResponse);
     } catch (error) {
       setResponse(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   function startListening() {
@@ -99,11 +104,12 @@ export default function App() {
   function speakText(text) {
     if (!window.speechSynthesis) return;
 
-    const utterance = new SpeechSynthesisUtterance(
-      text.slice(0, 2000)
-    );
+    speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text.slice(0, 2000));
     utterance.rate = 1;
     utterance.pitch = 1;
+
     speechSynthesis.speak(utterance);
   }
 
@@ -114,51 +120,74 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <h1>DevMentor AI</h1>
-      <p className="subtitle">
-        Your AI Tech Stack Advisor and Developer Mentor
-      </p>
+    <div className="app-shell">
+      <header className="hero">
+        <div className="hero-badge">🚀 Hackathon MVP</div>
+        <h1>DevMentor AI</h1>
+        <p className="subtitle">
+          Your AI Tech Stack Advisor and Developer Mentor
+        </p>
+      </header>
 
-      <select
-        value={selectedFeature.label}
-        onChange={(e) =>
-          setSelectedFeature(
-            FEATURES.find((f) => f.label === e.target.value)
-          )
-        }
-      >
-        {FEATURES.map((feature) => (
-          <option key={feature.label} value={feature.label}>
-            {feature.label}
-          </option>
-        ))}
-      </select>
+      <main className="main-grid">
+        <aside className="sidebar card">
+          <h2>Features</h2>
+          <div className="feature-list">
+            {FEATURES.map((feature) => (
+              <button
+                key={feature.label}
+                className={`feature-btn ${
+                  selectedFeature.label === feature.label ? "active" : ""
+                }`}
+                onClick={() => setSelectedFeature(feature)}
+              >
+                <span>{feature.icon}</span>
+                <span>{feature.label}</span>
+              </button>
+            ))}
+          </div>
+        </aside>
 
-      <textarea
-        rows="8"
-        placeholder={selectedFeature.placeholder}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-      />
+        <section className="workspace card">
+          <div className="section-header">
+            <h2>
+              {selectedFeature.icon} {selectedFeature.label}
+            </h2>
+          </div>
 
-      <div className="button-group">
-        <button onClick={handleSubmit} disabled={loading}>
-          {loading ? "Thinking..." : "Submit"}
-        </button>
+          <textarea
+            rows="8"
+            placeholder={selectedFeature.placeholder}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
 
-        <button onClick={startListening}>
-          🎤 Speak
-        </button>
+          <div className="button-group">
+            <button
+              className="primary-btn"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? "Thinking..." : "Submit"}
+            </button>
 
-        <button onClick={stopSpeaking}>
-          🔇 Stop Voice
-        </button>
-      </div>
+            <button className="secondary-btn" onClick={startListening}>
+              🎤 Speak
+            </button>
 
-      <pre className="response">
-        {response || "Response will appear here..."}
-      </pre>
+            <button className="secondary-btn" onClick={stopSpeaking}>
+              🔇 Stop
+            </button>
+          </div>
+
+          <div className="response-card">
+            <div className="response-header">Response</div>
+            <pre className="response">
+              {response || "Your AI response will appear here..."}
+            </pre>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
