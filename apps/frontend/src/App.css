@@ -186,11 +186,14 @@ textarea:focus {
   padding: 18px;
   max-height: 520px;
   overflow-y: auto;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  overflow-x: auto;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   line-height: 1.65;
   background: #020617;
   color: #e2e8f0;
+  max-width: 100%;
 }
 
 .markdown-body h1,
@@ -280,6 +283,35 @@ textarea:focus {
 .history-item small,
 .empty-history {
   color: #94a3b8;
+}
+
+.workspace {
+  min-width: 0;
+}
+
+.response-card {
+  min-width: 0;
+}
+
+.markdown-body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.markdown-body code {
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.markdown-body table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 @media (min-width: 1200px) {
