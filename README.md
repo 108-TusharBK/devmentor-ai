@@ -1,6 +1,5 @@
 # 🚀 DevMentor AI
 
-> **Your AI Tech Stack Advisor and Developer Mentor**
 
 DevMentor AI is a voice-enabled AI assistant that helps developers and students:
 
