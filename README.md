@@ -75,21 +75,20 @@ Beautiful formatting for headings, lists, tables, and code blocks.
 
 ### Main Dashboard
 
-```markdown
+
 ![Dashboard](docs/screenshots/dashboard.png)
-```
+
 
 ### Response
 
-```markdown
+
 ![Voice Mode](docs/screenshots/sample-query.png)
-```
+
 
 ### History Panel
 
-```markdown
 ![History](docs/screenshots/history-panel.png)
-```
+
 
 ---
 
